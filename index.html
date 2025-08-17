@@ -1,0 +1,773 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Tactile Sensor Hub</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    :root {
+      --primary: #4a5568; 
+      --primary-light: #718096;
+      --primary-dark: #2d3748; 
+      --black: #ffffff; 
+      --deep-black: #f7fafc; 
+      --silver: #e2e8f0; 
+      --white: #1a202c;
+      --gray: #f7fafc;
+      --border: #e2e8f0;
+      --radius: 18px;
+      --transition: 0.3s cubic-bezier(.4,0,.2,1);
+    }
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', 'Roboto', Arial, sans-serif;
+      background: #ffffff;
+      color: var(--white);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow-x: hidden;
+    }
+    html {
+      overflow-x: hidden;
+    }
+    
+    .hero-nav {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      width: 100vw;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background: transparent;
+      border: none;
+      pointer-events: none;
+      margin-bottom: 1.5em;
+    }
+    .hero-nav-inner {
+      background: #f8fafc;
+      box-shadow: 0 2px 16px #0008;
+      border-radius: 2em;
+      display: flex;
+      align-items: center;
+      gap: 2.2em;
+      padding: 0.7em 3.2em;
+      border: 1px solid #e2e8f0;
+      margin-top: 1.5em;
+      pointer-events: auto;
+      min-width: 420px;
+      max-width: 1100px;
+    }
+    .hero-nav a {
+      color: #4a5568;
+      text-decoration: none;
+      font-weight: 500;
+      font-size: 1.08em;
+      padding: 0.4em 1.2em;
+      border-radius: var(--radius);
+      transition: background var(--transition), color var(--transition);
+      pointer-events: auto;
+    }
+    .hero-nav a:hover {
+      background: var(--white); /* 反转为深色背景 */
+      color: var(--black); /* 文字变白色 */
+      box-shadow: 0 0 8px 2px #0004;
+    }
+    /* 主体内容区 */
+    .main-content {
+      width: 100vw;
+      min-height: 100vh;
+      background: #ffffff;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      transition: background var(--transition);
+      position: relative;
+      overflow-x: hidden;
+    }
+    main {
+      max-width: 1200px;
+      margin: 3em auto 2em auto;
+      padding: 0 1.5em;
+      min-height: 600px;
+      position: relative;
+      background: none;
+      border: none;
+      box-shadow: none;
+    }
+    /* 只在首页内容区居中 */
+    #home-section.page-section.active {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: calc(10vh - 40px); /* 120px 预留顶部导航和footer空间 */
+      width: 100%;
+      animation: fadeInUp 0.9s cubic-bezier(.4,0,.2,1);
+    }
+    #home-section.page-section.active > #intro {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+    }
+    #home-section.page-section.active > #intro h1,
+    #home-section.page-section.active > #intro .tagline,
+    #home-section.page-section.active > #intro .placeholder {
+      text-align: center;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    section { margin-bottom: 2.5em; }
+    .btn {
+      display: inline-block;
+      background: var(--white); /* 深色背景 */
+      color: var(--black); /* 白色文字 */
+      padding: 0.7em 2em;
+      border-radius: 2em;
+      text-decoration: none;
+      font-weight: 500;
+      font-size: 1.08em;
+      margin-top: 1em;
+      border: 2px solid var(--silver);
+      cursor: pointer;
+      box-shadow: 0 2px 8px #23252633;
+      transition: background var(--transition), color var(--transition), box-shadow var(--transition), border var(--transition);
+    }
+    .btn:hover {
+      background: var(--black); /* 白色 */
+      color: var(--white); /* 文字变深色 */
+      border: 2px solid var(--primary); /* 深色边框 */
+      box-shadow: 0 0 16px 4px var(--silver), 0 0 2px #0008;
+      text-shadow: 0 0 12px var(--silver), 0 0 2px #000;
+      letter-spacing: 1px;
+    }
+    .tagline { color: #4a5568; font-size: 1.15em; margin-bottom: 1.5em; }
+    dl, table { width: 100%; background: #f8fafc; border-radius: 10px; border: 1px solid #e2e8f0; color: #4a5568; margin: 1em 0; padding: 1em; font-size: 1em; }
+    dt { font-weight: bold; margin-top: 0.7em; }
+    dd { margin: 0 0 0.7em 0.7em; }
+    .placeholder { width: 100%; height: 180px; background: #f8fafc; border-radius: 10px; display: flex; align-items: center; justify-content: center; color: #4a5568; font-size: 1.1em; margin: 1.5em 0; border: 1px dashed #e2e8f0; }
+    ol { margin-left: 1.2em; }
+    footer { text-align: center; color: #4a5568; font-size: 0.98em; margin: 3em 0 1em 0; }
+    
+    /* 副标题装饰样式 */
+    .subtitle-decorated {
+      position: relative;
+      padding-left: 1.5em;
+      color: #2563eb; /* 科研蓝色 */
+      font-weight: 500;
+    }
+    .subtitle-decorated::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 0.2em;
+      bottom: 0.2em;
+      width: 4px;
+      background: #2563eb;
+      border-radius: 2px;
+    }
+    
+    /* Note部分背景框样式 */
+    .note-box {
+      background: rgba(37, 99, 235, 0.1);
+      border: 2px solid #2563eb;
+      border-radius: 8px;
+      padding: 1.5em;
+      margin: 1.5em 0;
+      color: #1e293b;
+    }
+    .note-box h2 {
+      color: #2563eb;
+      margin-top: 0;
+      margin-bottom: 0.5em;
+    }
+    /* 分区box样式 */
+    @media (max-width: 900px) {
+      .main-content { width: 100vw; }
+      main { padding: 0 0.5em; }
+      .hero-nav { gap: 1em; font-size: 0.98em; }
+      .hero-nav-inner {
+        padding: 0.7em 1em;
+        gap: 1em;
+        min-width: 0;
+        max-width: 98vw;
+      }
+    }
+    /* Linear风格侧边栏 */
+    .sidebar-linear {
+      position: fixed;
+      top: 0;
+      left: 0;
+      height: 100vh;
+      width: 200px;
+      background: #f8fafc;
+      border-right: 1px solid #e2e8f0;
+      box-shadow: 2px 0 12px #0004;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      z-index: 10;
+    }
+    .sidebar-logo {
+      display: flex;
+      align-items: center;
+      gap: 0.7em;
+      height: 70px;
+      font-size: 1.18em;
+      font-weight: bold;
+      color: #4a5568;
+      letter-spacing: 1px;
+      margin-top: 1em;
+    }
+    .sidebar-logo svg {
+      fill: #4a5568;
+    }
+    .sidebar-nav {
+      display: flex;
+      flex-direction: column;
+      gap: 1.25em;
+      margin-top: 2em;
+      width: 100%;
+      align-items: center;
+      flex: 0 0 auto;
+      justify-content: space-between;
+    }
+    .sidebar-nav a {
+      color: #4a5568;
+      text-decoration: none;
+      font-weight: 500;
+      font-size: 1.05em;
+      padding: 0.7em 1.5em;
+      border-radius: var(--radius);
+      width: 90%;
+      text-align: center;
+      transition: background var(--transition), color var(--transition);
+    }
+    .sidebar-nav a:hover {
+      background: var(--white); /* 反转为深色背景 */
+      color: var(--black); /* 文字变白色 */
+      box-shadow: 0 0 8px 2px #0004;
+    }
+    
+    /* 侧边栏按钮激活状态样式 - 与顶部导航保持一致 */
+    .sidebar-nav a.active {
+      background: var(--white); /* 深色背景 */
+      color: var(--black); /* 白色文字 */
+      box-shadow: 0 0 8px 2px #0004;
+    }
+    .sidebar-linear {
+      transition: opacity 0.3s, visibility 0.3s;
+    }
+    .sidebar-linear.hide-sidebar {
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+      margin-left: 0;
+    }
+    @media (max-width: 900px) {
+      .sidebar-linear {
+        display: none;
+      }
+      .main-content {
+        margin-left: 0 !important;
+      }
+    }
+    /* 主体内容区左移适配侧边栏 */
+    .main-content {
+      margin-left: 200px;
+      background: #ffffff;
+      min-height: 100vh;
+      position: relative;
+    }
+    @media (min-width: 900px) {
+      .main-content {
+        margin-left: 0;
+      }
+    }
+    
+    /* 传感器页面内容左移2cm，减少右侧空白 */
+    #magicgripper-section,
+    #magictac-section,
+    #gelsight-section,
+    #vitactip-section {
+      margin-left: -3cm;
+      box-sizing: border-box;
+      text-align: justify;
+    }
+    /* 页面切换淡入动画 */
+    .page-section {
+      display: none;
+      opacity: 0;
+      transition: opacity 0.5s;
+      position: absolute;
+      left: 0; top: 0; width: 100%;
+    }
+    .page-section.active {
+      display: block;
+      opacity: 1;
+      position: relative;
+      animation: fadeInPage 0.5s;
+    }
+    @keyframes fadeInPage {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+    .main-content { position: relative; }
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(60px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+    /* ========== Sidebar Slide-in/Out and Main Content Shift ========== */
+    .sidebar-linear{
+      transform: translateX(-220px);
+      opacity: 0;
+      pointer-events: none;
+      transition: transform .35s cubic-bezier(.4,0,.2,1), opacity .35s;
+    }
+    .main-content{
+      margin-left: 0;
+      transition: margin-left .35s cubic-bezier(.4,0,.2,1);
+    }
+    body.sidebar-open .sidebar-linear{
+      transform: translateX(0);
+      opacity: 1;
+      pointer-events: auto;
+    }
+    body.sidebar-open .main-content{
+      margin-left: 200px;
+    }
+  </style>
+</head>
+<body>
+  <!-- Hero Linear 风格导航栏 灵动岛效果 -->
+  <nav class="hero-nav">
+    <div class="hero-nav-inner">
+      <a href="#intro">Home</a>
+      <a href="#magicgripper">MagicGripper</a>
+      <a href="#magictac">MagicTac</a>
+      <a href="#gelsight">GelSight</a>
+      <a href="#vitactip">ViTacTip</a>
+    </div>
+  </nav>
+  <!-- Linear风格侧边栏 -->
+  <aside class="sidebar-linear">
+    <div class="sidebar-logo">
+      <svg viewBox="0 0 24 24" width="28" height="28"><path d="M3 11.5L12 4l9 7.5V20a1 1 0 0 1-1 1h-5v-5h-6v5H4a1 1 0 0 1-1-1V11.5z" fill="currentColor" /></svg>
+      <span>Tactile Sensor Database</span>
+    </div>
+    <nav class="sidebar-nav">
+      <a href="#intro">Intro</a>
+      <a href="#dataset">Dataset</a>
+      <a href="#download">Download</a>
+      <a href="#code">Code</a>
+      <a href="#publications">Publications</a>
+    </nav>
+  </aside>
+  <div class="main-content">
+    <main>
+      <section id="home-section" class="page-section active">
+        <section id="intro">
+          <h1 style="color:var(--white);font-size:2.2em;">Welcome to Tactile Sensor Database</h1>
+          <p class="tagline">subtitle placeholder.</p>
+          <p>The <b>Tactile Sensor Database</b> is an open-access platform dedicated to the latest advances in vision-based and multimodal tactile sensing for robotics. This website brings together detailed technical information, datasets, and open-source resources for state-of-the-art tactile sensors, including <b>MagicGripper</b>, <b>MagicTac</b>, <b>GelSight</b>, and <b>ViTacTip</b>.</p>
+          <div class="placeholder">[Image Placeholder]</div>
+        </section>
+      </section>
+      <section id="magicgripper-section" class="page-section">
+        <h1 style="text-align:center; color:var(--white); margin-top:0.5em;">MagicGripper</h1>
+        <section id="magicgripper-intro">
+          <h2>Introduction</h2>
+          <p>Robotic manipulation in contact-rich environments demands reliable sensing of object proximity, contact state, and interaction forces. Conventional grippers often integrate multiple heterogeneous sensors, leading to bulky designs and complex calibration procedures. To address these challenges, we introduce <b>MagicGripper</b>, a two-finger gripper equipped with mini-MagicTac sensors. These sensors leverage a 3D-printed grid-structured elastomer to simultaneously capture visual, proximity, and tactile information within a single compact design.
+            To support reproducible research and benchmarking, we release the <b>MagicGripper Dataset</b>, which contains synchronized visual-tactile frames across diverse object types, materials, and interaction scenarios. Tasks include contact detection, slip detection, force regression, and contact-rich manipulation benchmarks. This dataset enables consistent evaluation of algorithms across static and dynamic tactile perception tasks, accelerating the development of learning-based robotic manipulation methods.</p>
+        </section>
+        <section id="magicgripper-dataset">
+          <h2>Dataset</h2>
+          
+          <h3 class="subtitle-decorated">How is the MagicTac sensor fabricated?</h3>
+          <p>The mini-MagicTac sensors used in MagicGripper are fabricated using a <b>Stratasys J826 PolyJet 3D printer</b>, which enables multi-material printing with high spatial accuracy. The sensing elastomer consists of three integrated layers:</p>
+          <ul>
+            <li><b>Transparent outer skin</b> (0.5–1 mm thick Agilus30 Clear) providing durability and protection.</li>
+            <li><b>Grid-structured elastomeric core</b> (≈5 mm height, Agilus30 Clear filled with semi-transparent SUP706 support material), which encodes deformation under contact.</li>
+            <li><b>Transparent substrate</b> for integration with the internal illumination and camera.</li>
+          </ul>
+          <p>The transparent material preserves optical pathways, enabling both <b>external object imaging during approach (proximity sensing)</b> and <b>internal grid deformation imaging upon contact (tactile sensing)</b>. The structural parameters (grid size, skin thickness) were systematically varied to balance sensitivity, durability, and image clarity.</p>
+          
+          <h3 class="subtitle-decorated">What types of objects and interactions are included?</h3>
+          <p>The dataset spans a broad set of contact-rich scenarios:</p>
+          <ol>
+            <li><b>Static tactile resolution tasks</b> – fine-grained textures and patterns (0.2–1.75 mm feature spacing) are pressed against the sensor, with >25 distinct resolution levels for benchmarking tactile spatial resolution.</li>
+            <li><b>Dynamic force interaction tasks</b> – controlled indentation and shear forces are applied using calibrated force sensors. Each trial captures synchronized sensor images and ground-truth force vectors (fx, fy, fz).</li>
+            <li><b>Durability and consistency tests</b> – multiple sensors fabricated from identical CAD models are evaluated under repeated contact cycles (>90,000 frames per sensor), capturing performance drift, wear effects, and cross-sensor transferability.</li>
+            <li><b>Manipulation benchmarks</b> – object alignment, teleoperated insertion, and autonomous grasping tasks with common objects (fruits, packaged food, cylindrical tools). Both success/failure labels and frame-level multimodal sequences are included.</li>
+          </ol>
+          
+          <h3 class="subtitle-decorated">How is the data collected?</h3>
+          <p>The data collection system is built around a <b>parallel-jaw robotic gripper</b> integrated with mini-MagicTac sensors. Each sensor contains:</p>
+          <ul>
+            <li>A <b>high-resolution internal camera</b> (1280×720 pixels) capturing real-time RGB images.</li>
+            <li><b>LED-based illumination</b> for consistent imaging.</li>
+            <li><b>Calibration setup</b> with external force-torque sensors for ground-truth force data.</li>
+          </ul>
+          <p>For static tactile experiments, the elastomer surface is indented with calibrated probes and textured plates. For dynamic interaction, objects are pressed, rotated, or slid across the sensor under controlled force trajectories. In manipulation tasks, a 6-DOF robotic arm executes grasping and alignment motions, while MagicGripper provides multimodal sensing throughout the sequence.</p>
+          <p>Each recording session contains:</p>
+          <ul>
+            <li><b>Raw RGB frames</b> (captured at 30–60 fps).</li>
+            <li><b>Temporal fusion background references</b> for proximity detection.</li>
+            <li><b>Synchronized labels</b>: contact state, slip occurrence, object pose, and force ground truth (for selected tasks).</li>
+          </ul>
+          
+          <h3 class="subtitle-decorated">Dataset composition</h3>
+          <ul>
+            <li><b>Total frames</b>: >1.2 million RGB frames across static and dynamic experiments.</li>
+            <li><b>Static tactile dataset</b>: 50,000+ frames covering 25 texture resolution classes.</li>
+            <li><b>Dynamic force dataset</b>: 400,000+ frames paired with calibrated force labels.</li>
+            <li><b>Durability dataset</b>: 96,000+ frames per sensor, spanning 6 fabricated units.</li>
+            <li><b>Manipulation dataset</b>: 500,000+ frames from tasks including alignment, insertion, and autonomous grasping.</li>
+          </ul>
+          
+          <h3 class="subtitle-decorated">Access and formats</h3>
+          <p>The dataset is provided in standard formats:</p>
+          <ul>
+            <li><b>Images</b>: `.png` (raw frames) and `.npy` (pre-processed frames).</li>
+            <li><b>Annotations</b>: `.json` files containing timestamps, contact/proximity labels, object ID, force vectors, and experimental conditions.</li>
+            <li><b>Calibration files</b>: intrinsic/extrinsic parameters for cameras and force sensors.</li>
+          </ul>
+          <p>All data are organized by task type for ease of benchmarking. Pre-processed examples and baseline models (ResNet18 for contact/force tasks, LSTM-based slip detection) are included in the GitHub repository.</p>
+        </section>
+        <section id="magicgripper-download">
+          <h2>Download</h2>
+          <p>placeholder</p>
+        </section>
+        <section id="magicgripper-code">
+          <h2>Code</h2>
+          <p>placeholder</p>
+        </section>
+        <section id="magicgripper-publications">
+          <h2>Publications</h2>
+          <ul>
+            <li>Fan, W., Li, H., & Zhang, D. (Year). MagicGripper: A Multimodal Sensor-Integrated Gripper for Contact-Rich Robotic Manipulation. (Publication details not fully specified in the provided document).</li>
+          </ul>
+          <div class="note-box">
+            <p><b>Note</b><br>The MagicGripper's resources, including datasets and algorithms, are designed for contact-rich robotic manipulation tasks. Future work aims to extend its application to autonomous assembly, dexterous five-finger robotic hands, and medical diagnostics like tumor detection. The grid-like sensor's multimodal capabilities and integral printing advantages make it a scalable solution for advanced robotic perception.</p>
+          </div>
+        </section>
+      </section>
+      <section id="magictac-section" class="page-section">
+        <h1 style="text-align:center; color:var(--white); margin-top:0.5em;">MagicTac</h1>
+
+        <!-- ===== INTRO ===== -->
+        <section id="magictac-intro">
+          <h2>Introduction</h2>
+          <p><b>MagicTac</b> is a vision-based tactile sensor (VBTS) that uses a 3D multi-layer grid inspired by a magic-cube style structure (<a href="#fig1">Fig. 1</a>). Compared with typical Marker Displacement (MD) or GelSight-type sensors, MagicTac raises spatial resolution and lowers build effort by printing the skin and the internal grid in one step with multi-material additive manufacturing. It captures fine textures and dynamic contact (shear and torsion) without reflective coatings or manual marker placement. The grid is distributed through multiple layers, which improves sensitivity and detail recovery. With a minimum manufacturing cost of £4.76 and a minimum print time of 24.6 minutes, MagicTac is a cost-effective and repeatable option for robotic touch. The paper demonstrates these claims using deformation-field analysis and optical-flow tracking.</p>
+
+          <!-- Image placeholder: device hero -->
+          <div style="width:100%; aspect-ratio:16/9; margin:0.75rem 0; overflow:hidden; background:#fff;">
+            <img src="ImageTactile/Magictac1.png" alt="MagicTac Image 1" 
+                 style="width:100%; height:100%; object-fit:contain;" />
+          </div>
+          <p id="fig1" style="text-align: center; color: #666; font-size: 0.9em; margin: 0.5rem 0 1.5rem 0;"><b>Fig. 1.</b> MagicTac overview featuring a 3D multi-layer grid-based tactile sensor inspired by the magic cube design. The mesh-like texture on the skin surface reveals the underlying 3D grid structure.</p>
+          
+        </section>
+
+        <!-- ===== DATASET / FABRICATION ===== -->
+        <section id="magictac-dataset">
+          <h2>Dataset &amp; Fabrication</h2>
+
+                    <p class="subtitle-decorated"><i>How is the MagicTac sensor fabricated?</i></p>
+          <div style="display: flex; gap: 1.5rem; align-items: flex-start; margin: 0.75rem 0;">
+            <div style="width: 45%; flex-shrink: 0;">
+              <div style="aspect-ratio: 16/19; overflow: hidden; background: #fff;">
+                <img src="ImageTactile/Magictac2.png" alt="MagicTac Image 2" 
+                     style="width: 100%; height: 100%; object-fit: contain;" />
+              </div>
+              <p id="fig2" style="text-align: center; color: #666; font-size: 0.9em; margin: 0.5rem 0 0;"><b>Fig. 2.</b> Assembly diagram showing exploded view of MagicTac subassemblies (A) and tactile sensing schematic with section view (B), illustrating the sensor's internal structure and light path.</p>
+            </div>
+            <div style="width: 55%;">
+              <p>MagicTac is printed on a Stratasys J826 using multi-material additive manufacturing (<a href="#fig2">Fig. 2</a>). This removes silicone casting and manual marker steps. The sensor has two modules:</p>
+              <ul>
+                <li><b>Perception Module</b>: USB camera (160° field of view, 800&nbsp;&times;&nbsp;600 pixels, 60&nbsp;fps), an LED ring, and a tinfoil reflective layer to keep lighting uniform while avoiding lens glare.</li>
+                <li><b>Contact Module</b>: A transparent flexible skin (Agilus30 Clear, 0.6&nbsp;mm thick) with an embedded 3D multi-layer grid (Agilus30 Clear skeleton with ultra-soft support inside), a transparent lens (VeroClear), and a housing (VeroBlack). The skin has ~10,000 grid cells. Each cell has ~0.6&nbsp;mm horizontal dimension with ~0.3&nbsp;mm spacing, and there are ~1,385 cells per layer with 42 cells across the diameter. Tuning the skin thickness to 0.6&nbsp;mm reduces stiffness from Shore 30A to Shore 17A.</li>
+              </ul>
+            </div>
+          </div>
+     
+
+          <h3 class="subtitle-decorated">Geometry &amp; Materials (Key Numbers)</h3>
+          <p>Skin diameter 39.5&nbsp;mm and height 6&nbsp;mm. Lens diameter 38.5&nbsp;mm and thickness 2.5&nbsp;mm (VeroClear). Housing height 19.5&nbsp;mm, outer diameter 41&nbsp;mm, wall 2.5&nbsp;mm (VeroBlack). Printing is one-step (integral printing): remove a small amount of soft support, then the sensor is ready to use. The 3D multi-layer grid structure (<a href="#fig3">Fig. 3</a>) enables various deformation modes for tactile sensing.</p>
+
+          <!-- MagicTac Images -->
+          <div style="width:100%; aspect-ratio:26/9; overflow:hidden; background:#fff;">
+            <img src="ImageTactile/Magictac3.png" alt="MagicTac Image 3" 
+                 style="width:100%; height:100%; object-fit:contain;" />
+          </div>
+          <p id="fig3" style="text-align: center; color: #666; font-size: 0.9em; margin: 0.5rem 0 1.5rem 0;"><b>Fig. 3.</b> 3D multi-layer grid structure schematic in top and side views (A), with deformation examples demonstrating stationary, translation, rotation, and press contact scenarios (B-E). The relative motion between layered grid cells enables tactile feature mapping.</p>
+
+          <h3 class="subtitle-decorated">Manufacturing Efficiency</h3>
+          <p>Integral printing reduces time and labor (<a href="#fig4">Fig. 4</a>). Average print time and unit price drop as batch size increases. The fastest single-batch print is at five units because more than five units require a second tray area, which increases nozzle travel. Minimum per-unit values observed: 24.6 minutes and £4.76.</p>
+
+          <!-- MagicTac Images -->
+          <div style="width:100%; aspect-ratio:26/9; overflow:hidden; background:#fff;">
+            <img src="ImageTactile/Magictac4.png" alt="MagicTac Image 4" 
+                 style="width:100%; height:100%; object-fit:contain;" />
+          </div>
+          <p id="fig4" style="text-align: center; color: #666; font-size: 0.9em; margin: 0.5rem 0 1.5rem 0;"><b>Fig. 4.</b> Comparison of vision-based tactile sensor fabrication processes: mould-formed method (A) with highest complexity, split-printing approach (B) eliminating mould costs but requiring assembly, and integral-printing technique (C) minimizing preprocessing and postprocessing work.</p>
+        </section>
+        <section id="magictac-download">
+          <h2>Download</h2>
+          <p>placeholder</p>
+        </section>
+        <section id="magictac-code">
+          <h2>Code</h2>
+          <p>Placeholder</p>
+        </section>
+        <section id="magictac-publications">
+          <h2>Publications</h2>
+          <ul>
+            <li>Fan, W., Li, H., Zhang, D. “MagicTac: A Novel High-Resolution 3D Multi-layer Grid-Based Tactile Sensor.”</li>
+          </ul>
+          <div class="note-box">
+            <h2>Note</h2>
+            <p>MagicTac's open-source potential (e.g., CAD models, fabrication protocols) may be updated in future work. The sensor's design is generalizable for various robotic applications, with plans to integrate advanced AI for enhanced tactile perception and broader applicability in complex environments. For inquiries, contact <a href="mailto:d.zhang@imperial.ac.uk">d.zhang@imperial.ac.uk</a>.</p>
+          </div>
+        </section>
+      </section>
+      <section id="gelsight-section" class="page-section">
+        <h1 style="text-align:center; color:var(--white); margin-top:0.5em;">GelSight</h1>
+        <section id="gelsight-intro">
+          <h2>Introduction</h2>
+          <p>Tactile sensing is essential for enabling robots to interact physically with their environment, akin to human touch. Traditional sensors capture limited information (e.g., normal force), while vision-based tactile sensors (VBTS) like GelSight offer high-resolution measurements of shear forces, slip, texture, and 3D shape. GelSight combines a transparent elastomer gel with photometric stereo and marker-tracking algorithms to convert deformations into rich tactile data. This technology enables robots to perform complex tasks like USB insertion and fabric recognition. However, challenges include gel durability, computational demands, and limited datasets. Here, we present the Gelsight Representation Framework, integrating sensor design, mathematical foundations, and deep representation learning to advance robotic tactile perception.</p>
+          <h2 style="color:var(--white);">Explore Sensors</h2>
+          <p>Click the navigation above to view details of each tactile sensor project, including MagicGripper, MagicTac, GelSight, and ViTacTip.</p>
+        </section>
+
+        <section id="gelsight-download">
+          <h2>Download</h2>
+          <div class="placeholder">[Download Links Placeholder]</div>
+        </section>
+        <section id="gelsight-code">
+          <h2>Code</h2>
+          <div class="placeholder">[Code Links Placeholder]</div>
+        </section>
+        <section id="gelsight-publications">
+          <h2>Publications</h2>
+          <div class="placeholder">[Publications Placeholder]</div>
+        </section>
+      </section>
+      <section id="vitactip-section" class="page-section">
+        <h1 style="text-align:center; color:var(--white); margin-top:0.5em;">ViTacTip</h1>
+        <section id="vitactip-intro">
+          <h2>Introduction</h2>
+          <p>The complexity of real-world environments often renders single-modality sensing inadequate for comprehensive robotic perception. The ViTacTip sensor addresses this challenge by integrating visual, tactile, proximity, and force sensing into a compact design. Featuring a transparent "see-through-skin" mechanism and biomimetic pin-shaped markers, ViTacTip captures detailed object features upon contact, enhancing both vision-based and proximity perception. A Generative Adversarial Network (GAN)-based approach enables seamless modality switching, improving adaptability across diverse environments. Extensive benchmarking experiments, including object recognition, contact point detection, and grating identification, validate the versatility of ViTacTip. The sensor's multi-modal capabilities, supported by a hierarchical multi-task learning model, allow simultaneous recognition of hardness, material, and texture, significantly advancing robotic manipulation tasks.</p>
+        </section>
+        <section id="vitactip-dataset">
+          <h2>Dataset</h2>
+          <h3 class="subtitle-decorated">Sensor Fabrication</h3>
+          <p>The ViTacTip sensor is fabricated using a Stratasys J826 3D printer with AcryloClear for the transparent skin and pin-shaped markers, and Agilus30 Clear for the flexible yet durable contact surface. AcryloClear offers high optical clarity, while Agilus30 Clear, with a Shore A hardness of 30–35° and tensile strength of 2.4–3.1 MPa, ensures durability and adaptability to various object contours. The contact module involves a three-step assembly process, integrating the transparent skin, pins, and a rigid base.</p>
+          <h3 class="subtitle-decorated">Data Collection</h3>
+          <p>Data was collected using a desktop robotic arm (MG400) to interact with various objects, including 21 indentors with diverse 3D shapes, five elastomers with hardness levels from 17.5 to 33.25 HA, and 50 distinct fabric textures. For object recognition, 10,500 images were captured across predefined contact poses. Proximity perception data included datasets from a sharp object, human finger, flat desktop, and three textured cubes (Cube A, B, C). The sensor approached objects gradually, capturing real-time images until contact, followed by an additional 4 mm downward movement. Each trial was divided into distinct phases based on sensor response.</p>
+          
+          <h3 class="subtitle-decorated">Performance Evaluation</h3>
+          <h4>Object Recognition</h4>
+          <p>ViTacTip achieved a 99.91% accuracy in object recognition, significantly outperforming TacTip's 88.03%. The integration of visual and tactile data enabled superior differentiation of complex shapes like grids and curves, overcoming the limitations of tactile-only perception.</p>
+          <h4>Hardness, Material, and Texture Recognition</h4>
+          <p>A hierarchical multi-task learning model achieved recognition rates of 98.81% for material, 97.78% for texture, and 97.47% for hardness across five elastomers and 50 fabric textures. This demonstrates ViTacTip's robustness in complex tasks involving simultaneous modality processing.</p>
+          <h4>Hardware Benchmarking</h4>
+          <p>ViTacTip was compared against TacTip and ViTac (a marker-less version) in contact point detection, pose regression, and grating identification. Results are summarized in Table II:</p>
+          <table>
+            <tr><th>Sensors</th><th>Grating Acc</th><th>Pose Err. (mm)</th><th>Contact Pt. Err. (mm)</th></tr>
+            <tr><td>TacTip</td><td>94.60%</td><td>0.25</td><td>0.41</td></tr>
+            <tr><td>ViTac</td><td>99.72%</td><td>0.28</td><td>0.31</td></tr>
+            <tr><td>ViTacTip</td><td>99.72%</td><td>0.15</td><td>0.21</td></tr>
+          </table>
+          <p>ViTacTip outperformed both sensors, with a 99.72% grating identification accuracy and lower errors in pose (0.15 mm) and contact point detection (0.21 mm).</p>
+          <h4>GAN-Based Modality Switching</h4>
+          <p>MR-GAN and LR-GAN models enabled modality switching, with LR-GAN showing superior robustness (PSNR: 65.57, SSIM: 0.954, MSE: 0.0208) across varying lighting conditions compared to MR-GAN (PSNR: 59.22–63.08, SSIM: 0.837–0.926, MSE: 0.0383–0.0799).</p>
+        </section>
+        <section id="vitactip-download">
+          <h2>Download</h2>
+          <p>placeholder</p>
+        </section>
+        <section id="vitactip-code">
+          <h2>Code</h2>
+          <p>No specific code repository is provided in the document. For implementation details, refer to the referenced publications or contact the authors.</p>
+        </section>
+        <section id="vitactip-publications">
+          <h2>Publications</h2>
+          <ul>
+            <li>Loo, S., Yuan, W., Adelson, A. G. Cohn, and Fuentes, R. "Vitae: Feature sharing between vision and tactile sensing for cloth texture recognition." <i>2018 IEEE International Conference on Robotics and Automation (ICRA)</i>, pp. 2725–2732, 2018.</li>
+            <li>Lien, J. T., Bollegala, D., and Lee, S. "Learning to 'see' and 'seeing to feel': Robotic cross-modal sensory data generation for visual-tactile perception." <i>2019 International Conference on Robotics and Automation (ICRA)</i>, pp. 4642–4648, 2019.</li>
+            <li>Jiang, J., Cao, G., Butterworth, A., Do, T.-T., and Luo, S. "Where shall I touch? Vision-guided tactile picking for transparent object grasping." <i>IEEE/ASME Transactions on Mechatronics</i>, vol. 28, no. 1, pp. 233–244, 2023.</li>
+            <li>Yang, R., Zhang, W., Tiwari, N., Yan, H., Li, T., and Cheng, H. "Multimodal sensors with decoupled sensing mechanisms." <i>Advanced Sciences</i>, vol. 9, no. 26, p. 2302470, 2022.</li>
+            <li>Lepora, N. F. "Soft biomimetic optical tactile sensing with the TacTip: A review." <i>IEEE Sensors Journal</i>, vol. 21, no. 19, pp. 21131–21143, 2021.</li>
+            <li>Yuan, W., Dong, S., and Adelson, E. H. "GelSight: High-resolution robotic tactile sensors for estimating geometry and force." <i>Sensors</i>, vol. 17, no. 12, p. 2762, 2017.</li>
+            <li>Kim, W., Kim, W. D., Kim, J.-J., Kim, C.-H., and Kim, J. "UVTac: Switchable UV marker-based tactile sensing finger for effective force control and high-resolution tactile." <i>IEEE Robotics and Automation Letters</i>, vol. 7, no. 3, pp. 6036–6043, 2022.</li>
+          </ul>
+          <div class="note-box">
+            <h2>Note</h2>
+            <p>The ViTacTip sensor represents a significant advancement in multi-modal robotic perception, offering superior performance in complex tasks. Future work aims to optimize pin density and enhance GAN-based modality switching for improved generalizability. The sensor's adaptability makes it suitable for applications in electronics manufacturing, laboratory settings, and domestic environments requiring delicate handling.</p>
+          </div>
+        </section>
+      </section>
+    </main>
+    <footer>
+      &copy; 2025 Multi-Scale Embodied Intelligence Lab, Imperial College London. Contact: d.zhang17@imperial.ac.uk
+    </footer>
+  </div>
+  <script>
+    // 顶部导航点击切换页面
+    const topNavLinks = document.querySelectorAll('.hero-nav-inner a');
+    const sections = {
+      'home-section': document.getElementById('home-section'),
+      'magicgripper-section': document.getElementById('magicgripper-section'),
+      'magictac-section': document.getElementById('magictac-section'),
+      'gelsight-section': document.getElementById('gelsight-section'),
+      'vitactip-section': document.getElementById('vitactip-section'),
+    };
+    const sidebar = document.querySelector('.sidebar-linear');
+    
+    // 当前激活的传感器页面
+    let currentSensor = 'home';
+    
+    function showSection(sectionId) {
+      Object.values(sections).forEach(sec => sec.classList.remove('active'));
+      sections[sectionId].classList.add('active');
+      const needSidebar = sectionId !== 'home-section';
+      document.body.classList.toggle('sidebar-open', needSidebar);
+      
+      // 更新当前传感器
+      if (sectionId === 'magicgripper-section') currentSensor = 'magicgripper';
+      else if (sectionId === 'magictac-section') currentSensor = 'magictac';
+      else if (sectionId === 'gelsight-section') currentSensor = 'gelsight';
+      else if (sectionId === 'vitactip-section') currentSensor = 'vitactip';
+      else currentSensor = 'home';
+      
+      // 切换页面后更新侧边栏状态
+      setTimeout(() => {
+        updateSidebarActiveState();
+      }, 100);
+    }
+    
+    topNavLinks.forEach(link => {
+      link.addEventListener('click', function(e) {
+        const href = this.getAttribute('href');
+        if (href === '#intro') {
+          showSection('home-section');
+        } else if (href === '#magicgripper') {
+          showSection('magicgripper-section');
+        } else if (href === '#magictac') {
+          showSection('magictac-section');
+        } else if (href === '#gelsight') {
+          showSection('gelsight-section');
+        } else if (href === '#vitactip') {
+          showSection('vitactip-section');
+        }
+        e.preventDefault();
+      });
+    });
+    
+    // 页面加载时根据初始active section决定sidebar显示
+    document.addEventListener('DOMContentLoaded', function() {
+      const activeSection = document.querySelector('.page-section.active');
+      const needSidebar = activeSection && activeSection.id !== 'home-section';
+      document.body.classList.toggle('sidebar-open', needSidebar);
+      
+      // 设置初始传感器
+      if (activeSection && activeSection.id !== 'home-section') {
+        currentSensor = activeSection.id.replace('-section', '');
+      }
+    });
+
+    // 侧边栏导航平滑滚动到section
+    document.querySelectorAll('.sidebar-nav a').forEach(link => {
+      link.addEventListener('click', function(e) {
+        const href = this.getAttribute('href');
+        if (href && href.startsWith('#')) {
+          e.preventDefault();
+          
+          // 根据当前传感器和点击的链接确定目标section
+          let targetId = href.substring(1); // 移除 #
+          
+          if (currentSensor !== 'home') {
+            // 为传感器页面添加前缀
+            targetId = currentSensor + '-' + targetId;
+          }
+          
+          const target = document.querySelector('#' + targetId);
+          if (target) {
+            window.scrollTo({
+              top: target.getBoundingClientRect().top + window.scrollY - 32,
+              behavior: 'smooth'
+            });
+          }
+        }
+      });
+    });
+    
+    // 监听滚动事件，更新侧边栏按钮激活状态
+    function updateSidebarActiveState() {
+      const sidebarLinks = document.querySelectorAll('.sidebar-nav a');
+      const sections = ['intro', 'dataset', 'download', 'code', 'publications'];
+      
+      // 清除所有激活状态
+      sidebarLinks.forEach(link => link.classList.remove('active'));
+      
+      // 获取当前滚动位置
+      const scrollTop = window.scrollY;
+      const windowHeight = window.innerHeight;
+      
+      // 检查每个section的位置
+      sections.forEach((sectionName, index) => {
+        let sectionId = sectionName;
+        if (currentSensor !== 'home') {
+          sectionId = currentSensor + '-' + sectionName;
+        }
+        
+        const section = document.querySelector('#' + sectionId);
+        if (section) {
+          const rect = section.getBoundingClientRect();
+          
+          // 如果section在视窗中，激活对应的侧边栏按钮
+          // 使用更精确的检测：当section的顶部进入视窗的上半部分时激活
+          if (rect.top <= windowHeight * 0.3 && rect.bottom >= windowHeight * 0.3) {
+            const correspondingLink = document.querySelector(`.sidebar-nav a[href="#${sectionName}"]`);
+            if (correspondingLink) {
+              correspondingLink.classList.add('active');
+            }
+          }
+        }
+      });
+      
+      // 特殊处理：如果页面在顶部，激活第一个按钮（intro）
+      if (scrollTop < 100) {
+        const introLink = document.querySelector('.sidebar-nav a[href="#intro"]');
+        if (introLink) {
+          introLink.classList.add('active');
+        }
+      }
+    }
+    
+    // 添加滚动监听器（使用节流优化性能）
+    let scrollTimeout;
+    window.addEventListener('scroll', function() {
+      if (scrollTimeout) {
+        clearTimeout(scrollTimeout);
+      }
+      scrollTimeout = setTimeout(updateSidebarActiveState, 50);
+    });
+    
+    // 页面加载时也更新一次状态
+    document.addEventListener('DOMContentLoaded', function() {
+      updateSidebarActiveState();
+    });
+  </script>
+</body>
+</html>
